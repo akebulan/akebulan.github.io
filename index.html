@@ -3,10 +3,45 @@
   <head>
     <meta charset="utf-8">
     <title>bluetooth test</title>
-    <script src="Sprero_1.js"></script>
-  </head>
+    <script>
+      function onButtonClick() {
+        navigator.bluetooth.requestDevice({
+          filters: [{
+            //services: ['22bb746f-2bb0-7554-2d6f-726568705327']
+            namePrefix: ['SM-F08E']
+          }]
+        })
+        .then(device => {
+          console.log('> Found ' + device.name);
+          console.log('Connecting to GATT Server...');
+          return device.connectGATT();
+        })
+        .then(server => {
+          gattServer = server;
+          // Get radio service
+          return gattServer.getPrimaryService("22bb746f-2bb0-7554-2d6f-726568705327");
+        })
+        .then(service => {
+          // Developer mode sequence is sent to the radio service
+          radioService = service;
+          // Get Anti DOS characteristic
+          return radioService.getCharacteristic("22bb746f-2bbd-7554-2d6f-726568705327");
+        })
+        .then(characteristic => {
+          console.log('> Found Anti DOS characteristic');
+          // Send special string
+          let bytes = new Uint8Array('011i3'.split('').map(c => c.charCodeAt()));
+          return characteristic.writeValue(bytes).then(() => {
+            console.log('Anti DOS write done.');
+          })
+        })
+    }
+    </script>
+    </head>
   <body>
-    Hello World<<br>
-    <button type="button">Click Me!</button>
+    Hello World<br>
+    <form>
+      <button>Get Bluetooth Device Info</button>
+    </form>
   </body>
 </html>
